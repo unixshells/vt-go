@@ -78,6 +78,32 @@ type Emulator struct {
 var _ Terminal = (*Emulator)(nil)
 
 // NewEmulator creates a new virtual terminal emulator.
+// NewEmulatorNoScrollback creates an emulator with scrollback disabled.
+// Use this for mosh servers where only the visible screen matters.
+func NewEmulatorNoScrollback(w, h int) *Emulator {
+	t := new(Emulator)
+	t.scrs[0] = *NewScreenWithScrollback(w, h, 0)
+	t.scrs[1] = *NewScreenWithScrollback(w, h, 0)
+	t.scr = &t.scrs[0]
+	t.scrs[0].cb = &t.cb
+	t.scrs[1].cb = &t.cb
+	t.parser = ansi.NewParser()
+	t.parser.SetParamsSize(parser.MaxParamsSize)
+	t.parser.SetDataSize(1024 * 1024 * 4)
+	t.parser.SetHandler(ansi.Handler{
+		Print:     t.handlePrint,
+		Execute:   t.handleControl,
+		HandleCsi: t.handleCsi,
+		HandleEsc: t.handleEsc,
+		HandleDcs: t.handleDcs,
+		HandleOsc: t.handleOsc,
+		HandleApc: t.handleApc,
+		HandlePm:  t.handlePm,
+		HandleSos: t.handleSos,
+	})
+	return t
+}
+
 func NewEmulator(w, h int) *Emulator {
 	t := new(Emulator)
 	t.scrs[0] = *NewScreen(w, h)

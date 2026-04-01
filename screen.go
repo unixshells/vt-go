@@ -21,9 +21,15 @@ type Screen struct {
 
 // NewScreen creates a new screen.
 func NewScreen(w, h int) *Screen {
+	return NewScreenWithScrollback(w, h, DefaultScrollbackSize)
+}
+
+// NewScreenWithScrollback creates a new screen with a custom scrollback size.
+// Pass 0 to disable scrollback (saves memory for headless use like mosh servers).
+func NewScreenWithScrollback(w, h, maxScrollback int) *Screen {
 	s := Screen{
 		buf:        uv.NewRenderBuffer(w, h),
-		scrollback: NewScrollback(DefaultScrollbackSize),
+		scrollback: NewScrollback(maxScrollback),
 	}
 	s.scroll = s.buf.Bounds()
 	return &s
